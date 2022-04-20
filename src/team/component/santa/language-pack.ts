@@ -44,12 +44,12 @@ export async function getLanguagePackForWeb(
   const { apiKey } = await fetchGoogleSecret();
   const range = "Web!B2:I9999";
   const v = await getValues({ apiKey, spreadsheetId, range, accessToken });
-  const visitedKey = new Set<string>();
   const values = v.values
     .filter((row) => row.length)
-    .filter(([key]) => visitedKey.has(key) ? false : !!visitedKey.add(key))
     .sort((a, b) => a[0] < b[0] ? -1 : 1);
-  let [ko, ja, en, vi, zhHant, th] = Array(6).fill("{\n");
+  let [ko, ja, en, vi, zhHant, th] = Array(6)
+    .fill({}) as { [key: string]: string }[];
+  const json = (x: any) => JSON.stringify(x, null, 2) + "\n";
   const charMap = {
     "0": "\x00",
     "a": "\x07",
@@ -63,10 +63,6 @@ export async function getLanguagePackForWeb(
     "'": "\x27",
     '"': "\x22",
   };
-  function append(s: string, k: string, v: string) {
-    if (!k || !v) return s;
-    return s + `  ${JSON.stringify(k)}: ${JSON.stringify(evalString(v))},\n`;
-  }
   function evalString(str: string): string {
     return str.replace(
       /(?:\\x([0-9a-f]{2})|\\([0-7]{3})|\\([0abfnrtv\\'"]))/i,
@@ -80,21 +76,21 @@ export async function getLanguagePackForWeb(
   }
   for (const row of values) {
     const _row = Object.assign(Array(8).fill(""), row);
-    const key = _row[0];
-    ko = append(ko, key, _row[2]);
-    ja = append(ja, key, _row[3]);
-    en = append(en, key, _row[4]);
-    vi = append(vi, key, _row[5]);
-    zhHant = append(zhHant, key, _row[6]);
-    th = append(th, key, _row[7]);
+    const key = evalString(_row[0]);
+    ko[key] = evalString(_row[2]);
+    ja[key] = evalString(_row[3]);
+    en[key] = evalString(_row[4]);
+    vi[key] = evalString(_row[5]);
+    zhHant[key] = evalString(_row[6]);
+    th[key] = evalString(_row[7]);
   }
   return {
-    "packages/testprep/app/locales/ko-KR/translation.json": ko + "}\n",
-    "packages/testprep/app/locales/ja-JP/translation.json": ja + "}\n",
-    "packages/testprep/app/locales/en-US/translation.json": en + "}\n",
-    "packages/testprep/app/locales/vi-VN/translation.json": vi + "}\n",
-    "packages/testprep/app/locales/zh-TW/translation.json": zhHant + "}\n",
-    "packages/testprep/app/locales/th-TH/translation.json": th + "}\n",
+    "packages/testprep/app/locales/ko-KR/translation.json": json(ko),
+    "packages/testprep/app/locales/ja-JP/translation.json": json(ja),
+    "packages/testprep/app/locales/en-US/translation.json": json(en),
+    "packages/testprep/app/locales/vi-VN/translation.json": json(vi),
+    "packages/testprep/app/locales/zh-TW/translation.json": json(zhHant),
+    "packages/testprep/app/locales/th-TH/translation.json": json(th),
   };
 }
 
