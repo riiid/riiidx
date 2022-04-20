@@ -28,6 +28,7 @@ if (import.meta.main) {
     console.error(`Writing ${path}...`);
     await Deno.writeTextFile(root + "/" + path, languagePack[path]);
   }
+  Deno.exit();
 }
 
 export interface LanguagePack {
