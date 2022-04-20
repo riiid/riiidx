@@ -1,15 +1,34 @@
+import { bold, red, yellow } from "https://deno.land/std@0.135.0/fmt/colors.ts";
 import { getFreePort } from "https://deno.land/x/free_port@v1.2.0/mod.ts";
+import { open } from "https://deno.land/x/pbkit@v0.0.45/cli/pollapo/misc/browser.ts";
+import { Storage } from "../../misc/storage.ts";
 
-// TODO: store token in a file & refresh access token automatically
 export interface SignInConfig {
   clientId: string;
   clientSecret: string;
   scopes: string[];
+  tokenStorage?: Storage;
 }
 export async function signIn(config: SignInConfig): Promise<GetTokenResult> {
   const { clientId, clientSecret, scopes } = config;
+  refreshToken:
+  if (config.tokenStorage) {
+    const _refreshToken = await config.tokenStorage.getItem("refresh_token");
+    if (!_refreshToken) break refreshToken;
+    const token = await refreshToken({
+      clientId,
+      clientSecret,
+      refreshToken: _refreshToken,
+    });
+    await config.tokenStorage.setItem("refresh_token", token.refresh_token);
+    return token;
+  }
   const { code, redirectUri } = await getAuthCode({ scopes, clientId });
-  return await getToken({ clientId, clientSecret, redirectUri, code });
+  const token = await getToken({ clientId, clientSecret, redirectUri, code });
+  if (config.tokenStorage) {
+    await config.tokenStorage.setItem("refresh_token", token.refresh_token);
+  }
+  return token;
 }
 
 interface GetAuthCodeConfig {
@@ -26,9 +45,20 @@ async function getAuthCode(
   const { scopes, clientId } = config;
   const port = await getFreePort(12345);
   const redirectUri = `http://localhost:${port}`;
-  const authUrl = getAuthUrl({ scopes, clientId, redirectUri });
-  // TODO: Show user guide and open web browser
-  console.log(authUrl);
+  {
+    const authUrl = getAuthUrl({ scopes, clientId, redirectUri });
+    console.error(
+      `- ${bold("Press Enter")} to open sign-in page in your browser... `,
+    );
+    await Deno.stdin.read(new Uint8Array(1));
+    const { success } = await open(authUrl);
+    if (!success) {
+      console.error(red(
+        "Failed opening a browser. Please try entering the URL in your browser manually.",
+      ));
+      console.error(yellow(authUrl));
+    }
+  }
   const server = Deno.listen({ port });
   let resolve: (code: string) => void;
   const code = new Promise<string>((r) => resolve = r);
@@ -42,8 +72,18 @@ async function getAuthCode(
           requestEvent.respondWith(new Response("404", { status: 404 }));
           continue;
         }
-        // TODO: Show user guide to response body
-        requestEvent.respondWith(new Response("pong", { status: 200 }));
+        requestEvent.respondWith(
+          new Response(
+            [
+              `You are successfully signed in.`,
+              `Please close this browser tab and return to the terminal.`,
+            ].join("\n"),
+            {
+              status: 200,
+              headers: { "Content-Type": "text/plain; charset=utf-8" },
+            },
+          ),
+        );
         resolve(url.searchParams.get("code") || "");
         break;
       }
