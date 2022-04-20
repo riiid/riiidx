@@ -50,6 +50,19 @@ export async function getLanguagePackForWeb(
     .filter(([key]) => visitedKey.has(key) ? false : !!visitedKey.add(key))
     .sort((a, b) => a[0] < b[0] ? -1 : 1);
   let [ko, ja, en, vi, zhHant, th] = Array(6).fill("{\n");
+  const charMap = {
+    "0": "\x00",
+    "a": "\x07",
+    "b": "\x08",
+    "f": "\x0C",
+    "n": "\x0A",
+    "r": "\x0D",
+    "t": "\x09",
+    "v": "\x0B",
+    "\\": "\x5C",
+    "'": "\x27",
+    '"': "\x22",
+  };
   function append(s: string, k: string, v: string) {
     if (!k || !v) return s;
     return s + `  ${JSON.stringify(k)}: ${JSON.stringify(evalString(v))},\n`;
@@ -84,19 +97,6 @@ export async function getLanguagePackForWeb(
     "packages/testprep/app/locales/th-TH/translation.json": th + "}\n",
   };
 }
-const charMap = {
-  "0": "\x00",
-  "a": "\x07",
-  "b": "\x08",
-  "f": "\x0C",
-  "n": "\x0A",
-  "r": "\x0D",
-  "t": "\x09",
-  "v": "\x0B",
-  "\\": "\x5C",
-  "'": "\x27",
-  '"': "\x22",
-};
 
 export async function getLanguagePackForAndroid(
   { accessToken }: GetLanguagePackConfig,
