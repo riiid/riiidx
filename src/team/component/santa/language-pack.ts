@@ -47,8 +47,9 @@ export async function getLanguagePackForWeb(
   const values = v.values
     .filter((row) => row.length)
     .sort((a, b) => a[0] < b[0] ? -1 : 1);
-  let [ko, ja, en, vi, zhHant, th] = Array(6)
-    .fill({}) as { [key: string]: string }[];
+  let [ko, ja, en, vi, zhHant, th]: {
+    [key: string]: string;
+  }[] = [{}, {}, {}, {}, {}, {}];
   const json = (x: any) => JSON.stringify(x, null, 2) + "\n";
   const charMap = {
     "0": "\x00",
@@ -76,7 +77,7 @@ export async function getLanguagePackForWeb(
   }
   for (const row of values) {
     const _row = Object.assign(Array(8).fill(""), row);
-    const key = evalString(_row[0]);
+    const key = _row[0];
     ko[key] = evalString(_row[2]);
     ja[key] = evalString(_row[3]);
     en[key] = evalString(_row[4]);
