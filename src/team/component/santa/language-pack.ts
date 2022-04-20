@@ -44,13 +44,26 @@ export async function getLanguagePackForWeb(
   const { apiKey } = await fetchGoogleSecret();
   const range = "Web!B2:I9999";
   const v = await getValues({ apiKey, spreadsheetId, range, accessToken });
+  const visitedKey = new Set<string>();
   const values = v.values
     .filter((row) => row.length)
+    .filter(([key]) => visitedKey.has(key) ? false : !!visitedKey.add(key))
     .sort((a, b) => a[0] < b[0] ? -1 : 1);
   let [ko, ja, en, vi, zhHant, th] = Array(6).fill("{\n");
   function append(s: string, k: string, v: string) {
     if (!k || !v) return s;
-    return s + `  ${JSON.stringify(k)}: ${JSON.stringify(v)},\n`;
+    return s + `  ${JSON.stringify(k)}: ${JSON.stringify(evalString(v))},\n`;
+  }
+  function evalString(str: string): string {
+    return str.replace(
+      /(?:\\x([0-9a-f]{2})|\\([0-7]{3})|\\([0abfnrtv\\'"]))/i,
+      (input, hex, octal, char: string) => {
+        if (hex) return String.fromCodePoint(parseInt(hex, 16));
+        if (octal) return String.fromCharCode(parseInt(octal, 8) % 0x100);
+        if (char) return charMap[char.toLowerCase() as keyof typeof charMap];
+        return input;
+      },
+    );
   }
   for (const row of values) {
     const _row = Object.assign(Array(8).fill(""), row);
@@ -71,6 +84,19 @@ export async function getLanguagePackForWeb(
     "packages/testprep/app/locales/th-TH/translation.json": th + "}\n",
   };
 }
+const charMap = {
+  "0": "\x00",
+  "a": "\x07",
+  "b": "\x08",
+  "f": "\x0C",
+  "n": "\x0A",
+  "r": "\x0D",
+  "t": "\x09",
+  "v": "\x0B",
+  "\\": "\x5C",
+  "'": "\x27",
+  '"': "\x22",
+};
 
 export async function getLanguagePackForAndroid(
   { accessToken }: GetLanguagePackConfig,
@@ -81,12 +107,13 @@ export async function getLanguagePackForAndroid(
   let [ko, ja, en, vi, zhHant, th] = Array(6).fill("");
   const values = v.values.filter((row) => row.length);
   for (const row of values) {
-    ko += row[0] + "\n";
-    ja += row[1] + "\n";
-    en += row[2] + "\n";
-    vi += row[3] + "\n";
-    zhHant += row[4] + "\n";
-    th += row[5] + "\n";
+    const indent = row[0].startsWith("<string ") ? "    " : "";
+    ko += `${indent}${row[0]}\n`;
+    ja += `${indent}${row[1]}\n`;
+    en += `${indent}${row[2]}\n`;
+    vi += `${indent}${row[3]}\n`;
+    zhHant += `${indent}${row[4]}\n`;
+    th += `${indent}${row[5]}\n`;
   }
   return {
     "modules/presentation/src/main/res/values-ko/lang-pack.xml": ko,
