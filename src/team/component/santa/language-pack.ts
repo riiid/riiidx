@@ -44,21 +44,23 @@ export async function getLanguagePackForWeb(
   const { apiKey } = await fetchGoogleSecret();
   const range = "Web!B2:I9999";
   const v = await getValues({ apiKey, spreadsheetId, range, accessToken });
-  const values = v.values.filter((row) => row.length);
+  const values = v.values
+    .filter((row) => row.length)
+    .sort((a, b) => a[0] < b[0] ? -1 : 1);
   let [ko, ja, en, vi, zhHant, th] = Array(6).fill("{\n");
   function append(s: string, k: string, v: string) {
     if (!k || !v) return s;
     return s + `  ${JSON.stringify(k)}: ${JSON.stringify(v)},\n`;
   }
   for (const row of values) {
-    const _row = Object.assign(Array(6).fill(""), row);
+    const _row = Object.assign(Array(8).fill(""), row);
     const key = _row[0];
-    ko = append(ko, key, _row[1]);
-    ja = append(ja, key, _row[2]);
-    en = append(en, key, _row[3]);
-    vi = append(vi, key, _row[4]);
-    zhHant = append(zhHant, key, _row[5]);
-    th = append(th, key, _row[6]);
+    ko = append(ko, key, _row[2]);
+    ja = append(ja, key, _row[3]);
+    en = append(en, key, _row[4]);
+    vi = append(vi, key, _row[5]);
+    zhHant = append(zhHant, key, _row[6]);
+    th = append(th, key, _row[7]);
   }
   return {
     "packages/testprep/app/locales/ko-KR/translation.json": ko + "}\n",
