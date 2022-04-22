@@ -65,8 +65,8 @@ export async function getLanguagePackForWeb(
     '"': "\x22",
   };
   function evalString(str: string): string {
-    return str.replace(
-      /(?:\\x([0-9a-f]{2})|\\([0-7]{3})|\\([0abfnrtv\\'"]))/i,
+    return str.replaceAll(
+      /(?:\\x([0-9a-f]{2})|\\([0-7]{3})|\\([0abfnrtv\\'"]))/ig,
       (input, hex, octal, char: string) => {
         if (hex) return String.fromCodePoint(parseInt(hex, 16));
         if (octal) return String.fromCharCode(parseInt(octal, 8) % 0x100);
@@ -105,12 +105,14 @@ export async function getLanguagePackForAndroid(
   const values = v.values.filter((row) => row.length);
   for (const row of values) {
     const indent = row[0].startsWith("<string ") ? "    " : "";
-    ko += `${indent}${row[0]}\n`;
-    ja += `${indent}${row[1]}\n`;
-    en += `${indent}${row[2]}\n`;
-    vi += `${indent}${row[3]}\n`;
-    zhHant += `${indent}${row[4]}\n`;
-    th += `${indent}${row[5]}\n`;
+    const replace = (str: string) =>
+      `${indent}${str.replace(/\s+<resources>/, "\n<resources>")}\n`;
+    ko += replace(row[0]);
+    ja += replace(row[1]);
+    en += replace(row[2]);
+    vi += replace(row[3]);
+    zhHant += replace(row[4]);
+    th += replace(row[5]);
   }
   return {
     "modules/presentation/src/main/res/values-ko/lang-pack.xml": ko,
