@@ -86,12 +86,12 @@ export async function getLanguagePackForWeb(
     th[key] = evalString(_row[7]);
   }
   return {
-    "packages/testprep/app/locales/ko-KR/translation.json": json(ko),
-    "packages/testprep/app/locales/ja-JP/translation.json": json(ja),
-    "packages/testprep/app/locales/en-US/translation.json": json(en),
-    "packages/testprep/app/locales/vi-VN/translation.json": json(vi),
-    "packages/testprep/app/locales/zh-TW/translation.json": json(zhHant),
-    "packages/testprep/app/locales/th-TH/translation.json": json(th),
+    "service/app/locales/ko-KR/translation.json": json(ko),
+    "service/app/locales/ja-JP/translation.json": json(ja),
+    "service/app/locales/en-US/translation.json": json(en),
+    "service/app/locales/vi-VN/translation.json": json(vi),
+    "service/app/locales/zh-TW/translation.json": json(zhHant),
+    "service/app/locales/th-TH/translation.json": json(th),
   };
 }
 
