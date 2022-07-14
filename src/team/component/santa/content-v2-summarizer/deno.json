@@ -1,0 +1,8 @@
+{
+  "tasks": {
+    "clean": "rm -rf generated",
+    "gen": "deno task gen:pb && deno task gen:ubershape",
+    "gen:pb": "pb gen ts -o generated/pb --runtime-package=https://deno.land/x/pbkit@v0.0.51/core/runtime --entry-path=.pollapo",
+    "gen:ubershape": "deno run -A ./script/generate-rrtv2.ts"
+  }
+}

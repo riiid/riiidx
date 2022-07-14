@@ -1,0 +1,5 @@
+deps:
+  - riiid/interface-content-learning-model@main
+root:
+  lock:
+    riiid/interface-content-learning-model@main: e3a9fb9c28c3f4edc259b278f21b654c625a81a3
