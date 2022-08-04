@@ -1,4 +1,4 @@
-const SPREADSHEET_API = "https://sheets.googleapis.com/v4/spreadsheets/";
+const sheetsApiUrl = "https://sheets.googleapis.com/v4/spreadsheets/";
 
 export interface Sheet {
   properties: {
@@ -25,7 +25,7 @@ export async function getSpreadsheet(
 ): Promise<GetSpreadsheetResult> {
   const { apiKey, spreadsheetId, accessToken } = config;
   const res = await fetch(
-    SPREADSHEET_API + `${spreadsheetId}/?key=${apiKey}`,
+    `${sheetsApiUrl}${spreadsheetId}/?key=${apiKey}`,
     {
       method: "GET",
       headers: {
@@ -54,7 +54,7 @@ export async function getValues(
 ): Promise<GetValuesResult> {
   const { apiKey, spreadsheetId, range, accessToken } = config;
   const res = await fetch(
-    SPREADSHEET_API + `${spreadsheetId}/values/${range}?key=${apiKey}`,
+    `${sheetsApiUrl}${spreadsheetId}/values/${range}?key=${apiKey}`,
     {
       method: "GET",
       headers: {
