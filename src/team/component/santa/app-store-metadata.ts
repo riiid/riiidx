@@ -71,11 +71,11 @@ export async function getMetadata(
     throw new Error("Invalid metadata sheet");
   }
   return {
-    "ko/release_note.txt": ko,
-    "ja/release_note.txt": ja,
-    "vi/release_note.txt": vn,
-    "zh-Hant/release_note.txt": tw,
-    "en-US/release_note.txt": us,
-    "th/release_note.txt": th,
+    "ko/release_notes.txt": ko,
+    "ja/release_notes.txt": ja,
+    "vi/release_notes.txt": vn,
+    "zh-Hant/release_notes.txt": tw,
+    "en-US/release_notes.txt": us,
+    "th/release_notes.txt": th,
   };
 }
