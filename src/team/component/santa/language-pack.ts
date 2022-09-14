@@ -141,11 +141,11 @@ export async function getLanguagePackForIos(
     th += row[5] + "\n";
   }
   return {
-    "Toeic/Resources/ko.lproj/Localizable.strings": ko,
-    "Toeic/Resources/ja.lproj/Localizable.strings": ja,
-    "Toeic/Resources/en.lproj/Localizable.strings": en,
-    "Toeic/Resources/vi.lproj/Localizable.strings": vi,
-    "Toeic/Resources/zh-Hant-TW.lproj/Localizable.strings": zhHant,
-    "Toeic/Resources/th.lproj/Localizable.strings": th,
+    "Packages/Santa/Sources/SantaResources/Resources/ko.lproj/Localizable.strings": ko,
+    "Packages/Santa/Sources/SantaResources/Resources/ja.lproj/Localizable.strings": ja,
+    "Packages/Santa/Sources/SantaResources/Resources/en.lproj/Localizable.strings": en,
+    "Packages/Santa/Sources/SantaResources/Resources/vi.lproj/Localizable.strings": vi,
+    "Packages/Santa/Sources/SantaResources/Resources/zh-Hant-TW.lproj/Localizable.strings": zhHant,
+    "Packages/Santa/Sources/SantaResources/Resources/th.lproj/Localizable.strings": th,
   };
 }
