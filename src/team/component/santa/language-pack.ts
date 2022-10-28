@@ -1,3 +1,4 @@
+import * as path from "https://deno.land/std@0.135.0/path/mod.ts";
 import { signIn } from "../../../3rd-party/google/auth.ts";
 import { getValues } from "../../../3rd-party/google/sheet.ts";
 import { getRoot } from "../../../misc/git.ts";
@@ -16,6 +17,11 @@ if (import.meta.main) {
   );
   const token = await signIn({ clientId, clientSecret, scopes, tokenStorage });
   const platform = (Deno.args[0] as "web" | "android" | "ios") || "web";
+  const pathPrefix = Deno.args[1] || {
+    web: "service/app/locales",
+    android: "modules/presentation/src/main/res",
+    ios: "Sources/Toeic/SantaResources/Localizables",
+  }[platform] || "";
   console.error("Fetching language pack from google sheet...");
   const languagePack = (
     platform === "web"
@@ -24,9 +30,9 @@ if (import.meta.main) {
       ? await getLanguagePackForAndroid({ accessToken: token.access_token })
       : await getLanguagePackForIos({ accessToken: token.access_token })
   );
-  for (const path in languagePack) {
-    console.error(`Writing ${path}...`);
-    await Deno.writeTextFile(root + "/" + path, languagePack[path]);
+  for (const [file, data] of Object.entries(languagePack)) {
+    console.error(`Writing ${path.join(pathPrefix, file)}...`);
+    await Deno.writeTextFile(path.resolve(root, pathPrefix, file), data);
   }
   Deno.exit();
 }
@@ -86,12 +92,12 @@ export async function getLanguagePackForWeb(
     th[key] = evalString(_row[7]);
   }
   return {
-    "service/app/locales/ko-KR/translation.json": json(ko),
-    "service/app/locales/ja-JP/translation.json": json(ja),
-    "service/app/locales/en-US/translation.json": json(en),
-    "service/app/locales/vi-VN/translation.json": json(vi),
-    "service/app/locales/zh-TW/translation.json": json(zhHant),
-    "service/app/locales/th-TH/translation.json": json(th),
+    "ko-KR/translation.json": json(ko),
+    "ja-JP/translation.json": json(ja),
+    "en-US/translation.json": json(en),
+    "vi-VN/translation.json": json(vi),
+    "zh-TW/translation.json": json(zhHant),
+    "th-TH/translation.json": json(th),
   };
 }
 
@@ -115,12 +121,12 @@ export async function getLanguagePackForAndroid(
     th += replace(row[5]);
   }
   return {
-    "modules/presentation/src/main/res/values-ko/lang-pack.xml": ko,
-    "modules/presentation/src/main/res/values-ja/lang-pack.xml": ja,
-    "modules/presentation/src/main/res/values/lang-pack.xml": en,
-    "modules/presentation/src/main/res/values-vi/lang-pack.xml": vi,
-    "modules/presentation/src/main/res/values-zh-rTW/lang-pack.xml": zhHant,
-    "modules/presentation/src/main/res/values-th/lang-pack.xml": th,
+    "values-ko/lang-pack.xml": ko,
+    "values-ja/lang-pack.xml": ja,
+    "values/lang-pack.xml": en,
+    "values-vi/lang-pack.xml": vi,
+    "values-zh-rTW/lang-pack.xml": zhHant,
+    "values-th/lang-pack.xml": th,
   };
 }
 
@@ -141,11 +147,11 @@ export async function getLanguagePackForIos(
     th += row[5] + "\n";
   }
   return {
-    "Sources/Toeic/SantaResources/Localizables/ko.lproj/Localizable.strings": ko,
-    "Sources/Toeic/SantaResources/Localizables/ja.lproj/Localizable.strings": ja,
-    "Sources/Toeic/SantaResources/Localizables/en.lproj/Localizable.strings": en,
-    "Sources/Toeic/SantaResources/Localizables/vi.lproj/Localizable.strings": vi,
-    "Sources/Toeic/SantaResources/Localizables/zh-Hant-TW.lproj/Localizable.strings": zhHant,
-    "Sources/Toeic/SantaResources/Localizables/th.lproj/Localizable.strings": th,
+    "ko.lproj/Localizable.strings": ko,
+    "ja.lproj/Localizable.strings": ja,
+    "en.lproj/Localizable.strings": en,
+    "vi.lproj/Localizable.strings": vi,
+    "zh-Hant-TW.lproj/Localizable.strings": zhHant,
+    "th.lproj/Localizable.strings": th,
   };
 }
