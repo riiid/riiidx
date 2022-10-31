@@ -15,11 +15,16 @@ if (import.meta.main) {
     root + "/tmp/" + "santa-language-pack-google-login.json",
   );
   const token = await signIn({ clientId, clientSecret, scopes, tokenStorage });
-  const platform = (Deno.args[0] as "web" | "android" | "ios") || "web";
+  const platform =
+    (Deno.args[0] as "web" | "toeic-speaking-web" | "android" | "ios") || "web";
   console.error("Fetching language pack from google sheet...");
   const languagePack = (
     platform === "web"
       ? await getLanguagePackForWeb({ accessToken: token.access_token })
+      : platform === "toeic-speaking-web"
+      ? await getLangaugePackFormToeicSpeakingWeb({
+        accessToken: token.access_token,
+      })
       : platform === "android"
       ? await getLanguagePackForAndroid({ accessToken: token.access_token })
       : await getLanguagePackForIos({ accessToken: token.access_token })
@@ -95,6 +100,63 @@ export async function getLanguagePackForWeb(
   };
 }
 
+export async function getLangaugePackFormToeicSpeakingWeb(
+  { accessToken }: GetLanguagePackConfig,
+): Promise<LanguagePack> {
+  const { apiKey } = await fetchGoogleSecret();
+  const range = "Toeic Speaking Web!B2:I9999";
+  const v = await getValues({ apiKey, spreadsheetId, range, accessToken });
+  const values = v.values
+    .filter((row) => row.length)
+    .sort((a, b) => a[0] < b[0] ? -1 : 1);
+  let [ko, ja, en, vi, zhHant, th]: {
+    [key: string]: string;
+  }[] = [{}, {}, {}, {}, {}, {}];
+  const json = (x: any) => JSON.stringify(x, null, 2) + "\n";
+  const charMap = {
+    "0": "\x00",
+    "a": "\x07",
+    "b": "\x08",
+    "f": "\x0C",
+    "n": "\x0A",
+    "r": "\x0D",
+    "t": "\x09",
+    "v": "\x0B",
+    "\\": "\x5C",
+    "'": "\x27",
+    '"': "\x22",
+  };
+  function evalString(str: string): string {
+    return str.replaceAll(
+      /(?:\\x([0-9a-f]{2})|\\([0-7]{3})|\\([0abfnrtv\\'"]))/ig,
+      (input, hex, octal, char: string) => {
+        if (hex) return String.fromCodePoint(parseInt(hex, 16));
+        if (octal) return String.fromCharCode(parseInt(octal, 8) % 0x100);
+        if (char) return charMap[char.toLowerCase() as keyof typeof charMap];
+        return input;
+      },
+    );
+  }
+  for (const row of values) {
+    const _row = Object.assign(Array(8).fill(""), row);
+    const key = _row[0];
+    ko[key] = evalString(_row[2]);
+    ja[key] = evalString(_row[3]);
+    en[key] = evalString(_row[4]);
+    vi[key] = evalString(_row[5]);
+    zhHant[key] = evalString(_row[6]);
+    th[key] = evalString(_row[7]);
+  }
+  return {
+    "service/toeic-speaking-app/locales/ko-KR/translation.json": json(ko),
+    "service/toeic-speaking-app/locales/ja-JP/translation.json": json(ja),
+    "service/toeic-speaking-app/locales/en-US/translation.json": json(en),
+    "service/toeic-speaking-app/locales/vi-VN/translation.json": json(vi),
+    "service/toeic-speaking-app/locales/zh-TW/translation.json": json(zhHant),
+    "service/toeic-speaking-app/locales/th-TH/translation.json": json(th),
+  };
+}
+
 export async function getLanguagePackForAndroid(
   { accessToken }: GetLanguagePackConfig,
 ): Promise<LanguagePack> {
@@ -141,11 +203,17 @@ export async function getLanguagePackForIos(
     th += row[5] + "\n";
   }
   return {
-    "Sources/Toeic/SantaResources/Localizables/ko.lproj/Localizable.strings": ko,
-    "Sources/Toeic/SantaResources/Localizables/ja.lproj/Localizable.strings": ja,
-    "Sources/Toeic/SantaResources/Localizables/en.lproj/Localizable.strings": en,
-    "Sources/Toeic/SantaResources/Localizables/vi.lproj/Localizable.strings": vi,
-    "Sources/Toeic/SantaResources/Localizables/zh-Hant-TW.lproj/Localizable.strings": zhHant,
-    "Sources/Toeic/SantaResources/Localizables/th.lproj/Localizable.strings": th,
+    "Sources/Toeic/SantaResources/Localizables/ko.lproj/Localizable.strings":
+      ko,
+    "Sources/Toeic/SantaResources/Localizables/ja.lproj/Localizable.strings":
+      ja,
+    "Sources/Toeic/SantaResources/Localizables/en.lproj/Localizable.strings":
+      en,
+    "Sources/Toeic/SantaResources/Localizables/vi.lproj/Localizable.strings":
+      vi,
+    "Sources/Toeic/SantaResources/Localizables/zh-Hant-TW.lproj/Localizable.strings":
+      zhHant,
+    "Sources/Toeic/SantaResources/Localizables/th.lproj/Localizable.strings":
+      th,
   };
 }
