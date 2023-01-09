@@ -1,4 +1,4 @@
-import { Select } from "https://deno.land/x/cliffy@v0.24.3/prompt/mod.ts";
+import { Select } from "https://deno.land/x/cliffy@v0.25.4/prompt/mod.ts";
 import { signIn } from "../../../3rd-party/google/auth.ts";
 import * as fs from "https://deno.land/std@0.150.0/fs/mod.ts";
 import { dirname } from "https://deno.land/std@0.150.0/path/mod.ts";
