@@ -1,0 +1,7 @@
+specs:
+  - repository: riiid/abcd-interface
+    release-title: v1.2.3
+  - repository: riiid/temp-interface
+    release-title: 4
+  - repository: riiid/qwerty-interface
+    release-title: 0.1.2
