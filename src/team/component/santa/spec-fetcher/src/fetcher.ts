@@ -98,7 +98,11 @@ const fetcher = async (opts: Options) => {
         continue;
       }
 
-      await fs.rmdir(specOutputDir, { recursive: true });
+      try {
+        await fs.rmdir(specOutputDir, { recursive: true });
+      } catch (e) {
+        // noop
+      }
       console.log(`📥 Downloading ${specName}...`);
       if (existingSpecVersion) {
         console.log(
