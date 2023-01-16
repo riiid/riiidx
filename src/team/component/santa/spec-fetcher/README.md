@@ -53,6 +53,5 @@ specs:
 ### 📥 `-o, --output <path-to-output-directory>` (default: `.specs`)
 
 spec 파일들을 저장할 경로를 지정합니다.\
-이름이 정확히 `spec.json`인 파일만 릴리즈에서 가져옵니다.\
 spec 파일들은 각각 `path-to-output-directory/username/repository` 경로에
 저장됩니다.
