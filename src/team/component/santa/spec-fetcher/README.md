@@ -35,7 +35,9 @@ Options:
 버전 관리용 파일의 경로를 지정합니다. 현재 복수 input과 directory 지정은
 지원하지 않습니다.\
 버전 관리용 파일은 아래 형식의 yaml 파일으로 작성되어야 합니다.\
-사용 예시는 sample-spec.yml 파일을 참고해주세요.
+사용 예시는
+[sample-spec.yml](https://github.com/riiid/riiidx/blob/main/src/team/component/santa/spec-fetcher/README.md)
+파일을 참고해주세요.
 
 ```yaml
 specs:
