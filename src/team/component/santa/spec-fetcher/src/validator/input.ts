@@ -15,11 +15,10 @@ const validateLockFile = (data: Record<string, any>): true | string => {
     specs.some((item) => {
       const repository = item?.["repository"];
       const releaseTitle = item?.["release-title"];
-      const items = item?.["items"];
-      const isItemsValid = items === undefined ||
-        (Array.isArray(items) && items.length > 0 &&
-          items.every((name) => typeof name === "string"));
-      return typeof repository !== "string" || (!isItemsValid) ||
+      const filenamePattern = item?.["filename-pattern"];
+      return typeof repository !== "string" ||
+        (filenamePattern !== undefined &&
+          typeof filenamePattern !== "string") ||
         (typeof releaseTitle !== "string" && typeof releaseTitle !== "number");
     })
   ) {

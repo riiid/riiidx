@@ -40,12 +40,11 @@ Options:
 ```yaml
 specs:
   # 아래 형식으로 복수의 spec item을 명시할 수 있습니다.
-  - repository: username/repository 형식의 string
+  - repository: 'username/repository' 형식의 string
     release-title: spec file을 가져올 release의 이름, string 또는 number
-    items: # (optional) (default: spec.json)
-      - 파일명, string
-      - 파일명, string
-      # ...
+    filename-pattern: 가져올 spec file 이름 혹은 이름의 glob 패턴, string # (optional) (default: spec.json)
+                      glob 패턴을 작성하시는 경우 따옴표(')로 감싸주셔야 string으로 인식됩니다.
+  # ...
 ```
 
 <br />

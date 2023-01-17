@@ -3,10 +3,7 @@ specs:
     release-title: v1.2.3
   - repository: riiid/temp-interface
     release-title: 4
-    items:
-      - spec.json
-      - abcd.json
+    filename-pattern: '*spec.json'
   - repository: riiid/qwerty-interface
     release-title: 0.1.2
-    items:
-      - qwerty.json
+    filename-pattern: spec.json

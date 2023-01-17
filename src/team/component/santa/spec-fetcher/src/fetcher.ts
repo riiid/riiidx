@@ -1,5 +1,6 @@
 import { exec } from "https://deno.land/x/exec@0.0.5/mod.ts";
 import fs from "https://deno.land/std@0.170.0/node/fs/promises.ts";
+import { expandGlob } from "https://deno.land/std@0.170.0/fs/mod.ts";
 import { parse } from "https://deno.land/std@0.82.0/encoding/yaml.ts";
 import validator from "./validator/index.ts";
 import type { Options } from "./index.ts";
@@ -7,7 +8,7 @@ import type { Options } from "./index.ts";
 interface Spec {
   repository: string;
   releaseTitle: string;
-  items: string[];
+  filenamePattern: string;
 }
 
 interface Lock {
@@ -18,8 +19,12 @@ const SPEC_FILE_NAME = "spec.json" as const;
 
 const getExistingSpecVersion = async (
   path: string,
-  targetFileNames: string[],
+  filenamePattern: string,
 ): Promise<string | null> => {
+  let targetFileNames: string[] = [];
+  for await (const file of expandGlob(`${path}/${filenamePattern}`)) {
+    targetFileNames.push(file.name);
+  }
   async function* getSingleFileVersion() {
     for (const name of targetFileNames) {
       const filePath = `${path}/${name}`;
@@ -34,7 +39,8 @@ const getExistingSpecVersion = async (
       const parsed = JSON.parse(data);
       if (!parsed) yield null;
       if (!parsed.info?.version) {
-        throw new Error(`Version info not exists in ${filePath}.`);
+        throw new Error(`Version info not exists in ${filePath}.
+Please check spec version or remove ${filePath} manually and try again.`);
       }
       yield parsed.info.version;
     }
@@ -44,7 +50,7 @@ const getExistingSpecVersion = async (
   for await (const version of getSingleFileVersion()) {
     versions.add(version);
   }
-  if (versions.has(null)) {
+  if (versions.has(null) || versions.size === 0) {
     return null;
   }
   if (versions.size > 1) {
@@ -55,16 +61,12 @@ Please check spec version or remove ${path} manually and try again.`);
 };
 
 const fetcher = async (opts: Options) => {
-  const response = await exec("gh", { verbose: false });
-
-  if (!response.status.success) {
-    console.error(response.output);
-    if (response.output.includes("command not found")) {
-      console.error(
-        "Please install github CLI in your local environment. -> https://cli.github.com/",
-      );
-    }
-    Deno.exit(1);
+  try {
+    await exec("gh", { verbose: false });
+  } catch (e) {
+    throw new Error(
+      "Please install github CLI in your local environment. -> https://cli.github.com/",
+    );
   }
 
   const data = await fs.readFile(opts.input, { encoding: "utf8" });
@@ -75,17 +77,17 @@ const fetcher = async (opts: Options) => {
     return {
       repository: item.repository,
       releaseTitle: String(item["release-title"]),
-      items: item.items ?? [SPEC_FILE_NAME],
+      filenamePattern: item["filename-pattern"] ?? SPEC_FILE_NAME,
     };
   });
 
   async function* getReleaseItems() {
-    for (const { releaseTitle, repository, items } of specs) {
+    for (const { releaseTitle, repository, filenamePattern } of specs) {
       const specOutputDir = `${opts.output}/${repository}`;
       const specName = `${repository}@${releaseTitle}`;
       const existingSpecVersion = await getExistingSpecVersion(
         specOutputDir,
-        items,
+        filenamePattern,
       );
 
       if (
@@ -104,18 +106,20 @@ const fetcher = async (opts: Options) => {
           `   version ${existingSpecVersion} will be replace to version ${releaseTitle}`,
         );
       }
-      const response = await exec(
-        `gh release download \
+      try {
+        await exec(
+          `gh release download \
         ${releaseTitle} \
         --repo ${repository} \
-        --pattern ${SPEC_FILE_NAME} \
-        --dir ${specOutputDir}`,
-      );
-      if (!response.status.success) {
-        console.error(response.output);
+        --pattern ${filenamePattern} \
+        --dir ${specOutputDir}
+        --clobber`,
+        );
+        yield true;
+      } catch (e) {
+        console.error(e);
         Deno.exit(1);
       }
-      yield true;
     }
   }
   for await (const _ of getReleaseItems()) {
