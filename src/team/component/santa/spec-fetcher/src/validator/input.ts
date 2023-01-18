@@ -1,4 +1,4 @@
-import * as commander from "https://deno.land/x/cliffy@v0.25.2/command/mod.ts";
+import * as commander from "https://deno.land/x/cliffy@v0.25.7/command/mod.ts";
 
 const validateLockFile = (data: Record<string, any>): true | string => {
   const specs = data?.["specs"];
