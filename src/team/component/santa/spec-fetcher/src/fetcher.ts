@@ -2,6 +2,7 @@ import { exec } from "https://deno.land/x/exec@0.0.5/mod.ts";
 import fs from "https://deno.land/std@0.170.0/node/fs/promises.ts";
 import { expandGlob } from "https://deno.land/std@0.170.0/fs/mod.ts";
 import { parse } from "https://deno.land/std@0.82.0/encoding/yaml.ts";
+import { fileExtension } from "https://deno.land/x/file_extension@v2.1.0/mod.ts";
 import validator from "./validator/index.ts";
 import type { Options } from "./index.ts";
 
@@ -23,7 +24,9 @@ const getExistingSpecVersion = async (
 ): Promise<string | null> => {
   let targetFileNames: string[] = [];
   for await (const file of expandGlob(`${path}/${filenamePattern}`)) {
-    targetFileNames.push(file.name);
+    if (fileExtension(file.name)) {
+      targetFileNames.push(file.name);
+    }
   }
   async function* getSingleFileVersion() {
     for (const name of targetFileNames) {
