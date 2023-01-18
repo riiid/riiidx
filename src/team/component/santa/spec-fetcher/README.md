@@ -2,8 +2,7 @@
 
 ## Prerequisite
 
-- 사용 전 자신의 환경에 [github CLI](https://cli.github.com/)를 설치한 후,
-  로그인까지 완료해주세요.
+- 사용 전 자신의 환경에 [github CLI](https://cli.github.com/)를 설치한 후, 로그인까지 완료해주세요.
   \
   ([github hosted runner](https://docs.github.com/en/actions/using-workflows/using-github-cli-in-workflows)에는
   github CLI가 pre-install 되어있습니다.)
@@ -13,7 +12,7 @@
 ## How to use
 
 ```shell
-deno run -A https://deno.land/x/riiidx@v0.0.13/team/component/santa/spec-fetcher/src/index.ts [options]
+deno run -A https://deno.land/x/riiidx@{릴리즈 버전}/team/component/santa/spec-fetcher/src/index.ts [options]
 ```
 
 <br />
@@ -32,8 +31,7 @@ Options:
 
 ### 📤 `-i, --input <path-to-spec-file>` (required)
 
-버전 관리용 파일의 경로를 지정합니다. 현재 복수 input과 directory 지정은
-지원하지 않습니다.\
+버전 관리용 파일의 경로를 지정합니다. 현재 복수 input과 directory 지정은 지원하지 않습니다.\
 버전 관리용 파일은 아래 형식의 yaml 파일으로 작성되어야 합니다.\
 사용 예시는
 [sample-spec.yml](https://github.com/riiid/riiidx/blob/main/src/team/component/santa/spec-fetcher/README.md)
@@ -54,5 +52,4 @@ specs:
 ### 📥 `-o, --output <path-to-output-directory>` (default: `.specs`)
 
 spec 파일들을 저장할 경로를 지정합니다.\
-spec 파일들은 각각 `path-to-output-directory/username/repository` 경로에
-저장됩니다.
+spec 파일들은 각각 `path-to-output-directory/username/repository` 경로에 저장됩니다.
