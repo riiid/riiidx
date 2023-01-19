@@ -1,7 +1,7 @@
 import { exec } from "https://deno.land/x/exec@0.0.5/mod.ts";
-import fs from "https://deno.land/std@0.170.0/node/fs/promises.ts";
-import { expandGlob } from "https://deno.land/std@0.170.0/fs/mod.ts";
-import { parse } from "https://deno.land/std@0.82.0/encoding/yaml.ts";
+import fs from "https://deno.land/std@0.173.0/node/fs/promises.ts";
+import { expandGlob } from "https://deno.land/std@0.173.0/fs/mod.ts";
+import { parse } from "https://deno.land/std@0.173.0/encoding/yaml.ts";
 import { fileExtension } from "https://deno.land/x/file_extension@v2.1.0/mod.ts";
 import validator from "./validator/index.ts";
 import type { Options } from "./index.ts";
@@ -115,9 +115,10 @@ const fetcher = async (opts: Options) => {
         ${releaseTitle} \
         --repo ${repository} \
         --pattern ${filenamePattern} \
-        --dir ${specOutputDir}
+        --dir ${specOutputDir} \
         --clobber`,
         );
+        await fs.access(specOutputDir);
         yield true;
       } catch (e) {
         console.error(e);

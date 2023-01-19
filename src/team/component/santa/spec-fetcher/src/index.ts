@@ -22,5 +22,6 @@ command
   .parse(Deno.args);
 
 command.action(<Options>(options: Options) => {
-  fetcher(options);
+  // FIXME: type
+  fetcher(options as any);
 });
