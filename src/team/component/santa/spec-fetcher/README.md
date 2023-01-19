@@ -2,17 +2,26 @@
 
 ## Prerequisite
 
+### 로컬 환경
+
 - 사용 전 자신의 환경에 [github CLI](https://cli.github.com/)와 최신 버전의
   [deno](https://deno.land/)를 설치해주세요.
   \
   github CLI에 로그인이 필요한 경우 로그인까지 완료해주세요.
+
+### Github action / workflow
+
+- [denoland/setup-deno](https://github.com/denoland/setup-deno) action 등을
+  이용해 최신 버전의 deno 환경을 세팅해주세요.
 - [github hosted runner](https://docs.github.com/en/actions/using-workflows/using-github-cli-in-workflows)에는
-  github CLI가 pre-install 되어있어 별도의 세팅이 필요없습니다.
+  github CLI가 pre-install 되어있어 github CLI를 설치하지 않아도 됩니다.
   \
-  이외의 환경에서는 직접 세팅하여 사용해주세요.
-- github workflow 혹은 action에서 github CLI를 사용하기 위해서는
+  self hosted runner에서는
+  [setup gh cli](https://github.com/marketplace/actions/setup-gh-cli) action
+  등을 이용하여 설치해주세요.
+- 로컬 환경에서와 달리
   [env에
-  GH_TOKEN을 지정해주셔야 합니다.](https://docs.github.com/en/actions/using-workflows/using-github-cli-in-workflows)
+  GH_TOKEN을 추가로 지정해주셔야 합니다.](https://docs.github.com/en/actions/using-workflows/using-github-cli-in-workflows)
   ```yaml
   - name: 예시
     shell: bash
