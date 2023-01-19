@@ -2,8 +2,8 @@
 
 ## Prerequisite
 
-- 사용 전 자신의 환경에 [github CLI](https://cli.github.com/)를 설치한 후,
-  로그인까지 완료해주세요.
+- 사용 전 자신의 환경에 [github CLI](https://cli.github.com/)와 최신 버전의
+  [deno](https://deno.land/)를 설치해주세요.
 - [github hosted runner](https://docs.github.com/en/actions/using-workflows/using-github-cli-in-workflows)에는
   github CLI가 pre-install 되어있어 별도의 세팅이 필요없습니다. 이외의
   환경에서는 직접 세팅하여 사용해주세요.
