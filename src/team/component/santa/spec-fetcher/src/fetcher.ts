@@ -115,9 +115,10 @@ const fetcher = async (opts: Options) => {
         ${releaseTitle} \
         --repo ${repository} \
         --pattern ${filenamePattern} \
-        --dir ${specOutputDir}
+        --dir ${specOutputDir} \
         --clobber`,
         );
+        await fs.access(specOutputDir);
         yield true;
       } catch (e) {
         console.error(e);
