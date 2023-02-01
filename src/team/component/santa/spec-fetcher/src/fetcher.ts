@@ -4,7 +4,11 @@ import { expandGlob } from "https://deno.land/std@0.173.0/fs/mod.ts";
 import { parse } from "https://deno.land/std@0.173.0/encoding/yaml.ts";
 import { fileExtension } from "https://deno.land/x/file_extension@v2.1.0/mod.ts";
 import validator from "./validator/index.ts";
-import type { Options } from "./index.ts";
+
+interface FetcherOptions {
+  input: string;
+  output: string;
+}
 
 interface Spec {
   repository: string;
@@ -63,7 +67,7 @@ Please check spec version or remove ${path} manually and try again.`);
   return String(Array.from(versions)[0]);
 };
 
-const fetcher = async (opts: Options) => {
+const fetcher = async (opts: FetcherOptions) => {
   try {
     await exec("gh", { verbose: false });
   } catch (e) {
