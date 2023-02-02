@@ -130,7 +130,7 @@ const fetcher = async (opts: FetcherOptions) => {
         );
         if (!status.success) {
           throw new Error(
-            `Failed to download ${specName}.
+            `🚨 Failed to download ${specName}.
 Please check artifacts of glob pattern "${filenamePattern}" in version "${releaseTitle}" exists.`,
           );
         }
