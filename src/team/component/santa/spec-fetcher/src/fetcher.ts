@@ -110,7 +110,7 @@ const fetcher = async (opts: FetcherOptions) => {
         yield true;
         continue;
       } else {
-        await fs.rmdir(`${opts.output}/${repository}`, { recursive: true });
+        await fs.rmdir(specOutputDir, { recursive: true });
       }
 
       console.log(`📥 Downloading ${specName}...`);
