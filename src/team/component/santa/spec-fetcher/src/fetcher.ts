@@ -110,7 +110,12 @@ const fetcher = async (opts: FetcherOptions) => {
         yield true;
         continue;
       } else {
-        await fs.rmdir(specOutputDir, { recursive: true });
+        try {
+          await fs.access(specOutputDir);
+          await fs.rmdir(specOutputDir, { recursive: true });
+        } catch (e) {
+          // noop
+        }
       }
 
       console.log(`📥 Downloading ${specName}...`);
@@ -134,6 +139,7 @@ const fetcher = async (opts: FetcherOptions) => {
 Please check artifacts of glob pattern "${filenamePattern}" in version "${releaseTitle}" exists.`,
           );
         }
+        await fs.access(specOutputDir);
         yield true;
       } catch (e) {
         console.error(e);
