@@ -1,7 +1,7 @@
 import { exec } from "https://deno.land/x/exec@0.0.5/mod.ts";
 import fs from "https://deno.land/std@0.173.0/node/fs/promises.ts";
 import { expandGlob } from "https://deno.land/std@0.173.0/fs/mod.ts";
-import { parse } from "https://deno.land/std@0.173.0/encoding/yaml.ts";
+import { parse as parseYaml } from "https://deno.land/std@0.173.0/encoding/yaml.ts";
 import { fileExtension } from "https://deno.land/x/file_extension@v2.1.0/mod.ts";
 import validator from "./validator/index.ts";
 
@@ -16,11 +16,15 @@ interface Spec {
   filenamePattern: string;
 }
 
-interface Lock {
-  specs: Spec[];
+interface SpecFileContent {
+  specs: {
+    repository: string;
+    "release-title": string;
+    "filename-pattern"?: string;
+  }[];
 }
 
-const SPEC_FILE_NAME = "spec.json" as const;
+const DEFAULT_FILENAME_PATTERN = "spec.json" as const;
 
 const getExistingSpecVersion = async (
   path: string,
@@ -77,14 +81,14 @@ const fetcher = async (opts: FetcherOptions) => {
   }
 
   const data = await fs.readFile(opts.input, { encoding: "utf8" });
-  const parsed = parse(data);
+  const parsed = parseYaml(data) as SpecFileContent;
   await validator.input(parsed);
 
-  const specs: Array<Spec> = (parsed as Lock).specs.map((item: any) => {
+  const specs: Array<Spec> = parsed.specs.map((item) => {
     return {
       repository: item.repository,
       releaseTitle: String(item["release-title"]),
-      filenamePattern: item["filename-pattern"] ?? SPEC_FILE_NAME,
+      filenamePattern: item["filename-pattern"] ?? DEFAULT_FILENAME_PATTERN,
     };
   });
 
@@ -105,6 +109,8 @@ const fetcher = async (opts: FetcherOptions) => {
         );
         yield true;
         continue;
+      } else {
+        await fs.rmdir(`${opts.output}/${repository}`, { recursive: true });
       }
 
       console.log(`📥 Downloading ${specName}...`);
@@ -114,15 +120,20 @@ const fetcher = async (opts: FetcherOptions) => {
         );
       }
       try {
-        await exec(
+        const { status } = await exec(
           `gh release download \
         ${releaseTitle} \
         --repo ${repository} \
         --pattern ${filenamePattern} \
         --dir ${specOutputDir} \
-        --clobber`,
+        `,
         );
-        await fs.access(specOutputDir);
+        if (!status.success) {
+          throw new Error(
+            `Failed to download ${specName}.
+Please check artifacts of glob pattern "${filenamePattern}" in version "${releaseTitle}" exists.`,
+          );
+        }
         yield true;
       } catch (e) {
         console.error(e);
