@@ -30,7 +30,13 @@ if (import.meta.main) {
     : await getLanguagePackForIos({ accessToken: token.access_token });
   for (const [file, data] of Object.entries(languagePack)) {
     console.error(`Writing ${path.join(pathPrefix, file)}...`);
-    await Deno.mkdir(path.resolve(root, pathPrefix), { recursive: true });
+    await Deno.mkdir(
+      path.resolve(
+        root,
+        `${pathPrefix}/${file}`.split("/").slice(0, -1).join("/"),
+      ),
+      { recursive: true },
+    );
     await Deno.writeTextFile(path.resolve(root, pathPrefix, file), data);
   }
   Deno.exit();
@@ -46,14 +52,17 @@ export interface GetLanguagePackConfig {
 export async function getLanguagePackForWeb(
   { accessToken }: GetLanguagePackConfig,
 ): Promise<LanguagePack> {
-  const { apiKey } = await fetchGoogleSecret();
-  const sheets = ["Web(service)", "Web(toeic speaking)", "Web(admin)"] as const;
-  const fileNameMap = {
-    "Web(service)": "service",
-    "Web(toeic speaking)": "toeic-speaking",
-    "Web(admin)": "admin",
-  };
-
+  function evalString(str: string): string {
+    return str.replaceAll(
+      /(?:\\x([0-9a-f]{2})|\\([0-7]{3})|\\([0abfnrtv\\'"]))/ig,
+      (input, hex, octal, char: string) => {
+        if (hex) return String.fromCodePoint(parseInt(hex, 16));
+        if (octal) return String.fromCharCode(parseInt(octal, 8) % 0x100);
+        if (char) return charMap[char.toLowerCase() as keyof typeof charMap];
+        return input;
+      },
+    );
+  }
   const charMap = {
     "0": "\x00",
     "a": "\x07",
@@ -67,53 +76,34 @@ export async function getLanguagePackForWeb(
     "'": "\x27",
     '"': "\x22",
   };
-  function evalString(str: string): string {
-    return str.replaceAll(
-      /(?:\\x([0-9a-f]{2})|\\([0-7]{3})|\\([0abfnrtv\\'"]))/ig,
-      (input, hex, octal, char: string) => {
-        if (hex) return String.fromCodePoint(parseInt(hex, 16));
-        if (octal) return String.fromCharCode(parseInt(octal, 8) % 0x100);
-        if (char) return charMap[char.toLowerCase() as keyof typeof charMap];
-        return input;
-      },
-    );
+  const { apiKey } = await fetchGoogleSecret();
+  const range = `${Deno.args[2]}!B2:I9999`;
+  const v = await getValues({ apiKey, spreadsheetId, range, accessToken });
+  const values = v.values
+    .filter((row) => row.length)
+    .sort((a, b) => a[0] < b[0] ? -1 : 1);
+  let [ko, ja, en, vi, zhHant, th]: {
+    [key: string]: string;
+  }[] = [{}, {}, {}, {}, {}, {}];
+  const json = (x: any) => JSON.stringify(x, null, 2) + "\n";
+  for (const row of values) {
+    const _row = Object.assign(Array(8).fill(""), row);
+    const key = _row[0];
+    ko[key] = evalString(_row[2]);
+    ja[key] = evalString(_row[3]);
+    en[key] = evalString(_row[4]);
+    vi[key] = evalString(_row[5]);
+    zhHant[key] = evalString(_row[6]);
+    th[key] = evalString(_row[7]);
   }
-
-  return (await Promise.all(sheets.map(async (sheet) => {
-    const range = `${sheet}!B2:I9999`;
-    const v = await getValues({ apiKey, spreadsheetId, range, accessToken });
-    const values = v.values
-      .filter((row) => row.length)
-      .sort((a, b) => a[0] < b[0] ? -1 : 1);
-    let [ko, ja, en, vi, zhHant, th]: {
-      [key: string]: string;
-    }[] = [{}, {}, {}, {}, {}, {}];
-    const json = (x: any) => JSON.stringify(x, null, 2) + "\n";
-    for (const row of values) {
-      const _row = Object.assign(Array(8).fill(""), row);
-      const key = _row[0];
-      ko[key] = evalString(_row[2]);
-      ja[key] = evalString(_row[3]);
-      en[key] = evalString(_row[4]);
-      vi[key] = evalString(_row[5]);
-      zhHant[key] = evalString(_row[6]);
-      th[key] = evalString(_row[7]);
-    }
-    return [
-      `${fileNameMap[sheet]}.json`,
-      json({
-        "ko-KR": ko,
-        "ja-JP": ja,
-        "en-US": en,
-        "vi-VN": vi,
-        "zh-TW": zhHant,
-        "th-TH": th,
-      }),
-    ];
-  }))).reduce((prev, [key, json]) => ({
-    ...prev,
-    [key]: json,
-  }), {});
+  return {
+    "ko-KR/translation.json": json(ko),
+    "ja-JP/translation.json": json(ja),
+    "en-US/translation.json": json(en),
+    "vi-VN/translation.json": json(vi),
+    "zh-TW/translation.json": json(zhHant),
+    "th-TH/translation.json": json(th),
+  };
 }
 
 export async function getLanguagePackForAndroid(
