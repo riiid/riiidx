@@ -97,12 +97,12 @@ export async function getLanguagePackForWeb(
     th[key] = evalString(_row[7]);
   }
   return {
-    "ko-KR/translation.json": json(ko),
-    "ja-JP/translation.json": json(ja),
-    "en-US/translation.json": json(en),
-    "vi-VN/translation.json": json(vi),
-    "zh-TW/translation.json": json(zhHant),
-    "th-TH/translation.json": json(th),
+    "ko/translation.json": json(ko),
+    "ja/translation.json": json(ja),
+    "en/translation.json": json(en),
+    "vi/translation.json": json(vi),
+    "zh/translation.json": json(zhHant),
+    "th/translation.json": json(th),
   };
 }
 
