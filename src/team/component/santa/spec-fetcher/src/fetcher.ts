@@ -1,8 +1,6 @@
 import { exec } from "https://deno.land/x/exec@0.0.5/mod.ts";
 import fs from "https://deno.land/std@0.173.0/node/fs/promises.ts";
-import { expandGlob } from "https://deno.land/std@0.173.0/fs/mod.ts";
 import { parse as parseYaml } from "https://deno.land/std@0.173.0/encoding/yaml.ts";
-import { fileExtension } from "https://deno.land/x/file_extension@v2.1.0/mod.ts";
 import validator from "./validator/index.ts";
 
 interface FetcherOptions {
@@ -25,51 +23,6 @@ interface SpecFileContent {
 }
 
 const DEFAULT_FILENAME_PATTERN = "spec.json" as const;
-
-const getExistingSpecVersion = async (
-  path: string,
-  filenamePattern: string,
-): Promise<string | null> => {
-  let targetFileNames: string[] = [];
-  for await (const file of expandGlob(`${path}/${filenamePattern}`)) {
-    if (fileExtension(file.name)) {
-      targetFileNames.push(file.name);
-    }
-  }
-  async function* getSingleFileVersion() {
-    for (const name of targetFileNames) {
-      const filePath = `${path}/${name}`;
-      try {
-        await fs.access(filePath);
-      } catch (e) {
-        return null;
-      }
-      const data = await fs.readFile(filePath, {
-        encoding: "utf8",
-      });
-      const parsed = JSON.parse(data);
-      if (!parsed) yield null;
-      if (!parsed.info?.version) {
-        throw new Error(`Version info not exists in ${filePath}.
-Please check spec version or remove ${filePath} manually and try again.`);
-      }
-      yield parsed.info.version;
-    }
-  }
-
-  const versions = new Set<string | number | null>();
-  for await (const version of getSingleFileVersion()) {
-    versions.add(version);
-  }
-  if (versions.has(null) || versions.size === 0) {
-    return null;
-  }
-  if (versions.size > 1) {
-    throw new Error(`Version infos differ throughout specs in ${path}
-Please check spec version or remove ${path} manually and try again.`);
-  }
-  return String(Array.from(versions)[0]);
-};
 
 const fetcher = async (opts: FetcherOptions) => {
   try {
@@ -96,34 +49,8 @@ const fetcher = async (opts: FetcherOptions) => {
     for (const { releaseTitle, repository, filenamePattern } of specs) {
       const specOutputDir = `${opts.output}/${repository}`;
       const specName = `${repository}@${releaseTitle}`;
-      const existingSpecVersion = await getExistingSpecVersion(
-        specOutputDir,
-        filenamePattern,
-      );
-
-      if (
-        existingSpecVersion !== null && existingSpecVersion === releaseTitle
-      ) {
-        console.log(
-          `💨 ${specName} already exists in '${opts.output}' directory. Download was skipped.`,
-        );
-        yield true;
-        continue;
-      } else {
-        try {
-          await fs.access(specOutputDir);
-          await fs.rmdir(specOutputDir, { recursive: true });
-        } catch (e) {
-          // noop
-        }
-      }
 
       console.log(`📥 Downloading ${specName}...`);
-      if (existingSpecVersion) {
-        console.log(
-          `   version ${existingSpecVersion} will be replace to version ${releaseTitle}`,
-        );
-      }
       try {
         const { status } = await exec(
           `gh release download \
@@ -147,6 +74,13 @@ Please check artifacts of glob pattern "${filenamePattern}" in version "${releas
       }
     }
   }
+  try {
+    await fs.access(opts.output);
+    await fs.rmdir(opts.output, { recursive: true });
+  } catch (e) {
+    // noop
+  }
+
   for await (const _ of getReleaseItems()) {
     // noop
   }
