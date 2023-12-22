@@ -1,4 +1,3 @@
-import { exec } from "https://deno.land/x/exec@0.0.5/mod.ts";
 import fs from "https://deno.land/std@0.173.0/node/fs/promises.ts";
 import { parse as parseYaml } from "https://deno.land/std@0.173.0/encoding/yaml.ts";
 import validator from "./validator/index.ts";
@@ -26,7 +25,7 @@ const DEFAULT_FILENAME_PATTERN = "spec.json" as const;
 
 const fetcher = async (opts: FetcherOptions) => {
   try {
-    await exec("gh", { verbose: false });
+    new Deno.Command("gh").output();
   } catch (e) {
     throw new Error(
       "Please install github CLI in your local environment. -> https://cli.github.com/",
@@ -52,15 +51,23 @@ const fetcher = async (opts: FetcherOptions) => {
 
       console.log(`📥 Downloading ${specName}...`);
       try {
-        const { status } = await exec(
-          `gh release download \
-        ${releaseTitle} \
-        --repo ${repository} \
-        --pattern ${filenamePattern} \
-        --dir ${specOutputDir} \
-        `,
-        );
-        if (!status.success) {
+        const output = await new Deno.Command(
+          "gh",
+          {
+            args: [
+              "release",
+              "download",
+              releaseTitle,
+              `--repo`,
+              repository,
+              `--pattern`,
+              filenamePattern,
+              `--dir`,
+              specOutputDir,
+            ],
+          },
+        ).output();
+        if (!output.success) {
           throw new Error(
             `🚨 Failed to download ${specName}.
 Please check artifacts of glob pattern "${filenamePattern}" in version "${releaseTitle}" exists.`,
