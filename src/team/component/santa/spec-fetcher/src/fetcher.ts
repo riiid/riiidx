@@ -68,9 +68,9 @@ const fetcher = async (opts: FetcherOptions) => {
           },
         ).output();
         if (!output.success) {
+          const errorMessage = new TextDecoder().decode(output.stderr);
           throw new Error(
-            `🚨 Failed to download ${specName}.
-Please check artifacts of glob pattern "${filenamePattern}" in version "${releaseTitle}" exists.`,
+            `spec-fetcher: 🚨 Failed to download ${specName}.\nPlease check below original error message.\n\n${errorMessage}`,
           );
         }
         await fs.access(specOutputDir);
