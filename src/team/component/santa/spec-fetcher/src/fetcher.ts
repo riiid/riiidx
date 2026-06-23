@@ -22,6 +22,7 @@ interface SpecFileContent {
 }
 
 const DEFAULT_FILENAME_PATTERN = "spec.json" as const;
+const DOWNLOAD_CONCURRENCY = 5 as const;
 
 const fetcher = async (opts: FetcherOptions) => {
   try {
@@ -44,43 +45,38 @@ const fetcher = async (opts: FetcherOptions) => {
     };
   });
 
-  async function* getReleaseItems() {
-    for (const { releaseTitle, repository, filenamePattern } of specs) {
-      const specOutputDir = `${opts.output}/${repository}`;
-      const specName = `${repository}@${releaseTitle}`;
+  const downloadSpec = async (
+    { releaseTitle, repository, filenamePattern }: Spec,
+  ) => {
+    const specOutputDir = `${opts.output}/${repository}`;
+    const specName = `${repository}@${releaseTitle}`;
 
-      console.log(`📥 Downloading ${specName}...`);
-      try {
-        const output = await new Deno.Command(
-          "gh",
-          {
-            args: [
-              "release",
-              "download",
-              releaseTitle,
-              `--repo`,
-              repository,
-              `--pattern`,
-              filenamePattern,
-              `--dir`,
-              specOutputDir,
-            ],
-          },
-        ).output();
-        if (!output.success) {
-          const errorMessage = new TextDecoder().decode(output.stderr);
-          throw new Error(
-            `spec-fetcher: 🚨 Failed to download ${specName}.\nPlease check below original error message.\n\n${errorMessage}`,
-          );
-        }
-        await fs.access(specOutputDir);
-        yield true;
-      } catch (e) {
-        console.error(e);
-        Deno.exit(1);
-      }
+    console.log(`📥 Downloading ${specName}...`);
+    const output = await new Deno.Command(
+      "gh",
+      {
+        args: [
+          "release",
+          "download",
+          releaseTitle,
+          `--repo`,
+          repository,
+          `--pattern`,
+          filenamePattern,
+          `--dir`,
+          specOutputDir,
+        ],
+      },
+    ).output();
+    if (!output.success) {
+      const errorMessage = new TextDecoder().decode(output.stderr);
+      throw new Error(
+        `spec-fetcher: 🚨 Failed to download ${specName}.\nPlease check below original error message.\n\n${errorMessage}`,
+      );
     }
-  }
+    await fs.access(specOutputDir);
+  };
+
   try {
     await fs.access(opts.output);
     await fs.rmdir(opts.output, { recursive: true });
@@ -88,8 +84,14 @@ const fetcher = async (opts: FetcherOptions) => {
     // noop
   }
 
-  for await (const _ of getReleaseItems()) {
-    // noop
+  try {
+    for (let i = 0; i < specs.length; i += DOWNLOAD_CONCURRENCY) {
+      const chunk = specs.slice(i, i + DOWNLOAD_CONCURRENCY);
+      await Promise.all(chunk.map((spec) => downloadSpec(spec)));
+    }
+  } catch (e) {
+    console.error(e);
+    Deno.exit(1);
   }
   console.log(`👍 All spec files were downloaded to the path '${opts.output}'`);
 };
