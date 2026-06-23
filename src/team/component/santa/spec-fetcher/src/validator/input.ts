@@ -11,6 +11,15 @@ const validateLockFile = (data: Record<string, any>): true | string => {
   if (specs.length === 0) {
     return `No item exists to fetch.`;
   }
+  const concurrent = data?.["concurrent"];
+  if (
+    concurrent !== undefined &&
+    (typeof concurrent !== "number" ||
+      !Number.isInteger(concurrent) ||
+      concurrent < 1)
+  ) {
+    return `A key 'concurrent' must be a positive integer.`;
+  }
   if (
     specs.some((item) => {
       const repository = item?.["repository"];
