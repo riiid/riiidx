@@ -14,6 +14,7 @@ interface Spec {
 }
 
 interface SpecFileContent {
+  concurrent?: number;
   specs: {
     repository: string;
     "release-title": string;
@@ -22,7 +23,7 @@ interface SpecFileContent {
 }
 
 const DEFAULT_FILENAME_PATTERN = "spec.json" as const;
-const DOWNLOAD_CONCURRENCY = 5 as const;
+const DEFAULT_CONCURRENT = 1 as const;
 
 const fetcher = async (opts: FetcherOptions) => {
   try {
@@ -36,6 +37,8 @@ const fetcher = async (opts: FetcherOptions) => {
   const data = await fs.readFile(opts.input, { encoding: "utf8" });
   const parsed = parseYaml(data) as SpecFileContent;
   await validator.input(parsed);
+
+  const concurrent = parsed.concurrent ?? DEFAULT_CONCURRENT;
 
   const specs: Array<Spec> = parsed.specs.map((item) => {
     return {
@@ -85,8 +88,8 @@ const fetcher = async (opts: FetcherOptions) => {
   }
 
   try {
-    for (let i = 0; i < specs.length; i += DOWNLOAD_CONCURRENCY) {
-      const chunk = specs.slice(i, i + DOWNLOAD_CONCURRENCY);
+    for (let i = 0; i < specs.length; i += concurrent) {
+      const chunk = specs.slice(i, i + concurrent);
       await Promise.all(chunk.map((spec) => downloadSpec(spec)));
     }
   } catch (e) {

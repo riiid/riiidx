@@ -1,3 +1,4 @@
+concurrent: 5
 specs:
   - repository: riiid/abcd-interface
     release-title: v1.2.3

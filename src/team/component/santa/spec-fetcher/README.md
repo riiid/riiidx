@@ -62,6 +62,7 @@ Options:
 파일을 참고해주세요.
 
 ```yaml
+concurrent: 동시에 다운로드할 spec의 최대 개수, 1 이상의 정수 # (optional) (default: 1)
 specs:
   # 아래 형식으로 복수의 spec item을 명시할 수 있습니다.
   - repository: 'username/repository' 형식의 string
