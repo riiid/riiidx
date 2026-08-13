@@ -1,6 +1,7 @@
 name: Release spec-fetcher bundle
 
 on:
+  workflow_dispatch:
   push:
     branches: [main]
     paths: ["src/team/component/santa/spec-fetcher/**"]
