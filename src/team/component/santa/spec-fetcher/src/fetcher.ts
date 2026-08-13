@@ -1,4 +1,3 @@
-import fs from "https://deno.land/std@0.173.0/node/fs/promises.ts";
 import { parse as parseYaml } from "https://deno.land/std@0.173.0/encoding/yaml.ts";
 import validator from "./validator/index.ts";
 
@@ -34,7 +33,7 @@ const fetcher = async (opts: FetcherOptions) => {
     );
   }
 
-  const data = await fs.readFile(opts.input, { encoding: "utf8" });
+  const data = await Deno.readTextFile(opts.input);
   const parsed = parseYaml(data) as SpecFileContent;
   await validator.input(parsed);
 
@@ -77,12 +76,11 @@ const fetcher = async (opts: FetcherOptions) => {
         `spec-fetcher: 🚨 Failed to download ${specName}.\nPlease check below original error message.\n\n${errorMessage}`,
       );
     }
-    await fs.access(specOutputDir);
+    await Deno.stat(specOutputDir);
   };
 
   try {
-    await fs.access(opts.output);
-    await fs.rmdir(opts.output, { recursive: true });
+    await Deno.remove(opts.output, { recursive: true });
   } catch (e) {
     // noop
   }
